@@ -1,0 +1,26 @@
+// MONGO_URI=mongodb://localhost:27017/screenapp-io
+// PORT=5000
+// API_URL=http://localhost:5000
+// FRONTEND_URL=http://localhost:5173
+// JWT_SECRET=09f26e402586e2faa8da4c98a35f1b20d6b033c6097befa8be3486a829587fe2f90a832bd3ff9d42710a4da095a2ce285b009f0c3730cd9b8e1af3eb84df6611
+// SESSION_SECRET=keyboard
+// GITHUB_CLIENT_ID=Ov23liQNbaE1G2DbUCvu
+// GITHUB_CLIENT_SECRET=da55811fabbd42205378344023c81dcb24cef964
+// GOOGLE_CLIENT_ID=your_google_client_id
+// GOOGLE_CLIENT_SECRET=your_google_client_secret
+// MICROSOFT_CLIENT_ID=your_microsoft_client_id
+// MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret
+
+
+
+// 
+// VITE_API_URL=http://localhost:5000
+// FRONTEND_URL=http://localhost:5173
+// JWT_SECRET=09f26e402586e2faa8da4c98a35f1b20d6b033c6097befa8be3486a829587fe2f90a832bd3ff9d42710a4da095a2ce285b009f0c3730cd9b8e1af3eb84df6611
+// SESSION_SECRET=keyboard
+// GITHUB_CLIENT_ID=Ov23liQNbaE1G2DbUCvu
+// GITHUB_CLIENT_SECRET=da55811fabbd42205378344023c81dcb24cef964
+// GOOGLE_CLIENT_ID=your_google_client_id
+// GOOGLE_CLIENT_SECRET=your_google_client_secret
+// MICROSOFT_CLIENT_ID=your_microsoft_client_id
+// MICROSOFT_CLIENT_SECRET=your_microsoft_client_secret
