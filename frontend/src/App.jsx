@@ -8,8 +8,8 @@ import Hero from "./pages/Hero";
 import AuthCallback from "./pages/AuthCallback";
 import AdminDashboard from "./pages/AdminDashboard";
 import "./App.css";
-import { ThemeProvider } from "./components/ThemeProvider";
-import { ThemeToggle } from "./components/Toggle";
+// import { ThemeProvider } from "./components/ThemeProvider";
+// import { ThemeToggle } from "./components/Toggle";
 import NotFound from "./pages/Notfound";
 import ProtectedRoute from "./components/PrivateRoute";
 

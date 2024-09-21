@@ -4,9 +4,11 @@ import RecordRTC from "recordrtc";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Video, Camera, Monitor, Save, LogOut, Clock, ChevronDown, ChevronUp, Database, Download } from "lucide-react";
+import { Video, Camera, Monitor, Save, LogOut, Clock, ChevronDown, ChevronUp, Database, Download, History } from "lucide-react";
 import { toast } from "react-toastify";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const ScreenRecord = () => {
   const [recordingBlobs, setRecordingBlobs] = useState([]);
@@ -21,6 +23,39 @@ const ScreenRecord = () => {
   const navigate = useNavigate();
   const [recordedTime, setRecordedTime] = useState(0);
   const startTimeRef = useRef(null);
+  const [previousRecordings, setPreviousRecordings] = useState([]);
+  const [activeTab, setActiveTab] = useState("current");
+  const [isPreviousLoading, setIsPreviousLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  useEffect(() => {
+    if (activeTab === "previous" && previousRecordings.length === 0) {
+      fetchPreviousRecordings();
+    }
+  }, [activeTab]);
+
+  const fetchPreviousRecordings = async () => {
+    setIsPreviousLoading(true);
+    setError("");
+    try {
+      const response = await fetch("http://localhost:5000/recordings");
+      if (!response.ok) {
+        throw new Error("Failed to fetch previous recordings");
+      }
+      const data = await response.json();
+      setPreviousRecordings(data);
+    } catch (error) {
+      console.error("Error fetching previous recordings:", error);
+      setError("Failed to fetch previous recordings. Please try again.");
+    } finally {
+      setIsPreviousLoading(false);
+    }
+  };
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    setError("");
+  };
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("accessToken");
@@ -113,7 +148,7 @@ const ScreenRecord = () => {
     }
   }, []);
 
-  const saveRecordedDataToDB = useCallback(async (usermail) => {
+  const handleSave = useCallback(async (usermail) => {
     if (recordingBlobs.length === 0) {
       setError("No recordings available to save.");
       return;
@@ -136,7 +171,8 @@ const ScreenRecord = () => {
           throw new Error("Failed to save recording");
         }
       }
-      toast.success("All recordings saved to database!");
+      toast.success(recordingBlobs.length > 1 ? "All recordings saved to database!" : "Recording saved to database!");
+      setRecordingBlobs([]);
     } catch (error) {
       console.error("Error saving recordings to the database:", error);
       setError("Failed to save all recordings. Please try again.");
@@ -178,6 +214,27 @@ const ScreenRecord = () => {
     toast.success("All recordings saved locally!");
   }, [recordingBlobs]);
 
+  const handleDelete = async (id) => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`http://localhost:5000/recordings/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete recording");
+      }
+      setPreviousRecordings(prevRecordings => prevRecordings.filter(recording => recording.id !== id));
+      toast.success("Recording deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting recording:", error);
+      setError("Failed to delete recording. Please try again.");
+    } finally {
+      setIsLoading(false);
+      setDeleteId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-full mx-auto">
@@ -194,119 +251,185 @@ const ScreenRecord = () => {
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <Card className="lg:col-span-3">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                {['Screen Only', 'Screen + Camera', 'Camera Only'].map((mode) => (
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="current">New Recording</TabsTrigger>
+            <TabsTrigger value="previous">Previous Recordings</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="current">
+            <Card className="lg:col-span-3">
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                  {['Screen Only', 'Screen + Camera', 'Camera Only'].map((mode) => (
+                    <Button
+                      key={mode}
+                      onClick={() => setRecordingMode(mode)}
+                      variant={recordingMode === mode ? 'default' : 'outline'}
+                      className={`h-20 ${recordingMode === mode ? 'bg-blue-500 text-white' : ''}`}
+                      disabled={isRecording || isLoading}
+                    >
+                      <div className="flex flex-col items-center">
+                        {mode === 'Screen Only' && <Monitor className="h-6 w-6 mb-2" />}
+                        {mode === 'Screen + Camera' && <Video className="h-6 w-6 mb-2" />}
+                        {mode === 'Camera Only' && <Camera className="h-6 w-6 mb-2" />}
+                        <span className="text-sm">{mode}</span>
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
                   <Button
-                    key={mode}
-                    onClick={() => setRecordingMode(mode)}
-                    variant={recordingMode === mode ? 'default' : 'outline'}
-                    className={`h-20 ${recordingMode === mode ? 'bg-blue-500 text-white' : ''}`}
-                    disabled={isRecording || isLoading}
+                    onClick={isRecording ? handleStop : handleStart}
+                    disabled={(!isRecording && !recordingMode) || isLoading}
+                    className="w-48 h-12 text-lg font-semibold"
+                    variant={isRecording ? "destructive" : "default"}
                   >
-                    <div className="flex flex-col items-center">
-                      {mode === 'Screen Only' && <Monitor className="h-6 w-6 mb-2" />}
-                      {mode === 'Screen + Camera' && <Video className="h-6 w-6 mb-2" />}
-                      {mode === 'Camera Only' && <Camera className="h-6 w-6 mb-2" />}
-                      <span className="text-sm">{mode}</span>
-                    </div>
+                    {isLoading ? 'Processing...' : isRecording ? 'Stop Recording' : 'Start Recording'}
                   </Button>
-                ))}
-              </div>
 
-              <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
-                <Button
-                  onClick={isRecording ? handleStop : handleStart}
-                  disabled={(!isRecording && !recordingMode) || isLoading}
-                  className="w-48 h-12 text-lg font-semibold"
-                  variant={isRecording ? "destructive" : "default"}
-                >
-                  {isLoading ? 'Processing...' : isRecording ? 'Stop Recording' : 'Start Recording'}
-                </Button>
-
-                <div className="flex items-center">
-                  <Clock className="mr-2 h-6 w-6 text-blue-500" />
-                  <span className="text-lg font-semibold">
-                    {recordedTime > 0
-                      ? new Date(recordedTime * 1000).toISOString().substr(11, 8)
-                      : "00:00:00"}
-                  </span>
-                </div>
-
-                {recordingBlobs.length > 0 && (
-                  <div className="flex gap-2">
-                    <Button onClick={() => saveRecordedDataToDB("user@example.com")} disabled={isRecording || isLoading} className="h-12 font-semibold bg-green-500 hover:bg-green-600 text-white">
-                      <Database className="mr-2 h-4 w-4" /> Save All to DB
-                    </Button>
-                    <Button onClick={saveRecordingLocally} disabled={isRecording || isLoading} className="h-12 font-semibold bg-blue-500 hover:bg-blue-600 text-white">
-                      <Download className="mr-2 h-4 w-4" /> Save All Locally
-                    </Button>
+                  <div className="flex items-center">
+                    <Clock className="mr-2 h-6 w-6 text-blue-500" />
+                    <span className="text-lg font-semibold">
+                      {recordedTime > 0
+                        ? new Date(recordedTime * 1000).toISOString().substr(11, 8)
+                        : "00:00:00"}
+                    </span>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card className="lg:col-span-1">
-            <CardContent className="p-6">
-              <Collapsible open={showInstructions} onOpenChange={setShowInstructions}>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-semibold text-blue-600">Instructions</h2>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      {showInstructions ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </Button>
-                  </CollapsibleTrigger>
+                  {recordingBlobs.length > 0 && (
+                    <div className="flex gap-2">
+                      <Button onClick={() => handleSave("user@example.com")} disabled={isRecording || isLoading} className="h-12 font-semibold bg-green-500 hover:bg-green-600 text-white">
+                        <Database className="mr-2 h-4 w-4" />{recordingBlobs.length > 1 ? "Save All to DB" : "Save to DB"}
+                      </Button>
+                      <Button onClick={saveRecordingLocally} disabled={isRecording || isLoading} className="h-12 font-semibold bg-blue-500 hover:bg-blue-600 text-white">
+                        <Download className="mr-2 h-4 w-4" /> {recordingBlobs.length > 1 ? "Save All Locally" : "Save Locally"}{recordingBlobs.length > 1 ? "Save All Locally" : "Save Locally"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                <CollapsibleContent>
-                  <ol className="list-decimal list-inside space-y-2 text-sm">
-                    <li>Select a recording mode from the options above.</li>
-                    <li>Click 'Start Recording' to begin capturing your screen and/or camera.</li>
-                    <li>When finished, click 'Stop Recording' to end the capture.</li>
-                    <li>Preview your recording in the video player(s) below.</li>
-                    <li>Click 'Save All to DB' to store your videos in the database or 'Save All Locally' to download.</li>
-                  </ol>
-                </CollapsibleContent>
-              </Collapsible>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
 
-        {recordingBlobs.length > 0 && (
-          <div className="mt-8 space-y-6">
-            <h2 className="text-2xl font-semibold text-blue-600 mb-4">Recorded Videos</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recordingBlobs.map(({ webcamVideo, screenVideo }, index) => (
-                <React.Fragment key={index}>
-                  {webcamVideo && (
-                    <Card>
+            <Card className="lg:col-span-1">
+              <CardContent className="p-6">
+                <Collapsible open={showInstructions} onOpenChange={setShowInstructions}>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-2xl font-semibold text-blue-600">Instructions</h2>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        {showInstructions ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                  </div>
+                  <CollapsibleContent>
+                    <ol className="list-decimal list-inside space-y-2 text-sm">
+                      <li>Select a recording mode from the options above.</li>
+                      <li>Click 'Start Recording' to begin capturing your screen and/or camera.</li>
+                      <li>When finished, click 'Stop Recording' to end the capture.</li>
+                      <li>Preview your recording in the video player(s) below.</li>
+                      <li>Click 'Save All to DB' to store your videos in the database or 'Save All Locally' to download.</li>
+                    </ol>
+                  </CollapsibleContent>
+                </Collapsible>
+              </CardContent>
+            </Card>
+            {recordingBlobs.length > 0 && (
+              <div className="mt-8 space-y-6">
+                <h2 className="text-2xl font-semibold text-blue-600 mb-4">Recorded Videos</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {recordingBlobs.map(({ webcamVideo, screenVideo }, index) => (
+                    <React.Fragment key={index}>
+                      {webcamVideo && (
+                        <Card>
+                          <CardContent className="p-4">
+                            <h3 className="text-lg font-medium mb-2">Webcam Video {index + 1}</h3>
+                            <video controls className="w-full rounded-lg">
+                              <source src={URL.createObjectURL(webcamVideo)} type="video/webm" />
+                              Your browser does not support the video tag.
+                            </video>
+                          </CardContent>
+                        </Card>
+                      )}
+                      {screenVideo && (
+                        <Card>
+                          <CardContent className="p-4">
+                            <h3 className="text-lg font-medium mb-2">Screen Video {index + 1}</h3>
+                            <video controls className="w-full rounded-lg">
+                              <source src={URL.createObjectURL(screenVideo)} type="video/webm" />
+                              Your browser does not support the video tag.
+                            </video>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            )}
+          </TabsContent>
+
+
+          <TabsContent value="previous">
+            <div className="mt-8 space-y-6">
+              <h2 className="text-2xl font-semibold text-blue-600 mb-4">Previous Recordings</h2>
+              {isPreviousLoading ? (
+                <div className="text-center">
+                  <p>Loading previous recordings...</p>
+                </div>
+              ) : previousRecordings.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {previousRecordings.map((recording, index) => (
+                    <Card key={recording.id}>
                       <CardContent className="p-4">
-                        <h3 className="text-lg font-medium mb-2">Webcam Video {index + 1}</h3>
-                        <video controls className="w-full rounded-lg">
-                          <source src={URL.createObjectURL(webcamVideo)} type="video/webm" />
-                          Your browser does not support the video tag.
-                        </video>
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="text-lg font-medium">Recording {index + 1}</h3>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="icon" onClick={() => setDeleteId(recording.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will permanently delete your recording.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(deleteId)}>Continue</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                        {recording.webcamVideo && (
+                          <video controls className="w-full rounded-lg mb-2">
+                            <source src={recording.webcamVideo} type="video/webm" />
+                            Your browser does not support the video tag.
+                          </video>
+                        )}
+                        {recording.screenVideo && (
+                          <video controls className="w-full rounded-lg">
+                            <source src={recording.screenVideo} type="video/webm" />
+                            Your browser does not support the video tag.
+                          </video>
+                        )}
+                        <p className="text-sm text-gray-500 mt-2">Recorded on: {new Date(recording.createdAt).toLocaleString()}</p>
                       </CardContent>
                     </Card>
-                  )}
-                  {screenVideo && (
-                    <Card>
-                      <CardContent className="p-4">
-                        <h3 className="text-lg font-medium mb-2">Screen Video {index + 1}</h3>
-                        <video controls className="w-full rounded-lg">
-                          <source src={URL.createObjectURL(screenVideo)} type="video/webm" />
-                          Your browser does not support the video tag.
-                        </video>
-                      </CardContent>
-                    </Card>
-                  )}
-                </React.Fragment>
-              ))}
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center">
+                  <p>No previous recordings found.</p>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
