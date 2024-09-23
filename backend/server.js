@@ -5,6 +5,7 @@ const authRoutes = require('./routes/AuthRoute');
 const cors = require('cors');
 const session = require('express-session');
 const passport = require('./passportConfig')
+const recordingRoutes = require('./routes/RecordingRoute');
 dotenv.config();
 
 const app = express();
@@ -16,7 +17,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/auth', authRoutes);
-
+app.use('/api', recordingRoutes);
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
     console.log('Connected to MongoDB');

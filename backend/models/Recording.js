@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
-
 const recordingSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
+    required: true,
   },
-  webcamVideo: String, 
-  screenVideo: String, 
+  webcamVideo: Buffer,
+  screenVideo: Buffer,
   createdAt: {
     type: Date,
     default: Date.now,

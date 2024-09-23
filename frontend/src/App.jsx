@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
-import ScreenRecord from "./pages/ScreenRecord";
+import ScreenRecord from "./pages/ScreenRecord1";
 import Home from "./pages/Home";
 import Registration from "./pages/Register";
 import Hero from "./pages/Hero";

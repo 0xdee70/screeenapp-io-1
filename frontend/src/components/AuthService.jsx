@@ -1,5 +1,4 @@
-// src/services/authService.js
-const API_URL = 'http://localhost:5000/auth';
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Register user
 export const register = async (email, password) => {
@@ -55,7 +54,7 @@ export const verifyToken = async (token) => {
 };
 
 export const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('role');
-    }
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('role');
+}
 
