@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
-import ScreenRecord from "./pages/ScreenRecord1";
+import ScreenRecord from "./pages/ScreenRecord";
 import Home from "./pages/Home";
 import Registration from "./pages/Register";
 import Hero from "./pages/Hero";
@@ -12,6 +12,9 @@ import "./App.css";
 // import { ThemeToggle } from "./components/Toggle";
 import NotFound from "./pages/Notfound";
 import ProtectedRoute from "./components/PrivateRoute";
+import MasterAdminDashboard from "./pages/MasterAdminDashboard";
+import MasterAdminLogin from "./pages/MasterAdminLogin";
+import AdminLogin from "./pages/AdminLogin";
 
 export default function App() {
   return (
@@ -41,8 +44,18 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/admin-login" element={<AdminLogin />} />
+        <Route
+          path="/master-admin"
+          element={
+            <ProtectedRoute requiredRole="master_admin">
+              <MasterAdminDashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/404" element={<NotFound />} />
         <Route path="*" element={<Navigate to="/404" replace />} />
+        <Route path="/master-login" element={<MasterAdminLogin />} />
       </Routes>
       {/* </div> */}
     </Router>

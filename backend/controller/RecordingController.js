@@ -36,7 +36,7 @@ const recordCon = async (req, res) => {
     res.status(201).json({ message: "Recordings created successfully" });
   } catch (error) {
     console.error("Error in recordCon:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
 

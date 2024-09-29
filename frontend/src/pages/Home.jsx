@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogIn, ShieldCheck, UserPlus } from "lucide-react";
+import { LogIn, ShieldCheck, UserPlus, ShieldAlert } from "lucide-react";
 
 const Home = () => {
   return (
@@ -28,9 +28,16 @@ const Home = () => {
             </Button>
 
             <Button asChild variant="outline" className="w-full">
-              <Link to="/admin" className="flex items-center justify-center">
+              <Link to="/admin-login" className="flex items-center justify-center">
                 <ShieldCheck className="mr-2 h-4 w-4" />
                 Admin Login
+              </Link>
+            </Button>
+
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/master-login" className="flex items-center justify-center">
+                <ShieldAlert className="mr-2 h-4 w-4" />
+                Master Admin Login
               </Link>
             </Button>
           </nav>

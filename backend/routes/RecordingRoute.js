@@ -11,6 +11,9 @@ router.post('/recordings', authMiddleware, upload.fields([
 ]), RecordingController.recordCon);
 
 router.get('/recordings', authMiddleware, RecordingController.getRecordings);
+
+
+
 router.delete('/recordings/:id', authMiddleware, RecordingController.deleteRecording);
 
 module.exports = router;
