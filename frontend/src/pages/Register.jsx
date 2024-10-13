@@ -211,7 +211,7 @@ const RegisterPage = () => {
                   }}
                 />
               </div>
-              <Button type="submit" color="primary" className="w-full text-white" disabled={isLoading}>
+              <Button type="submit" color="primary" className="w-full text-black" disabled={isLoading}>
                 {isLoading ? "Registering..." : "Sign Up"}
               </Button>
             </form>
