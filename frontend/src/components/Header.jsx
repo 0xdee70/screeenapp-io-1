@@ -101,7 +101,7 @@ const Header = ({
                         <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
                             <Menu className="h-6 w-6" />
                         </Button>
-                        <h1 className="ml-2 lg:ml-4 text-lg lg:text-xl font-bold">CovideoClone</h1>
+                        <h1 className="ml-2 lg:ml-4 text-lg lg:text-xl font-bold">VOID</h1>
                     </div>
                     <nav className="hidden lg:flex items-center space-x-4">
                         <Button
