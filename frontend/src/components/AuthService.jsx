@@ -1,14 +1,13 @@
-// src/services/authService.js
-const API_URL = 'http://localhost:5000/auth';
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Register user
-export const register = async (email, password) => {
-  const response = await fetch(`${API_URL}/register`, {
+export const register = async (name, email, password) => {
+  const response = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ name, email, password }),
   });
 
   if (!response.ok) {
@@ -16,12 +15,12 @@ export const register = async (email, password) => {
   }
 
   const data = await response.json();
-  return data; // Returns the token and role
+  return data;
 };
 
-// Login user
+
 export const login = async (email, password) => {
-  const response = await fetch(`${API_URL}/login`, {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -34,28 +33,12 @@ export const login = async (email, password) => {
   }
 
   const data = await response.json();
-  return data; // Returns the token and role
+  return data;
 };
 
-// Verify token and get role
-export const verifyToken = async (token) => {
-  const response = await fetch(`${API_URL}/protected`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('Token verification failed');
-  }
-
-  const data = await response.json();
-  return data; // Returns the role from token verification
-};
 
 export const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('role');
-    }
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('role');
+}
 

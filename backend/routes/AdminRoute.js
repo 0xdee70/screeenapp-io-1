@@ -1,34 +1,14 @@
 const express = require('express');
-const { isAuthenticated, isAdmin } = require('../middleware/authMiddleware');
-const User = require('../models/User');
+const { getUsers, toggleUserAccess, getAdmins, promoteToAdmin, demoteAdmin, toggle2FA } = require('../controller/AdminController');
+const authenticate = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.get('/users', isAuthenticated, isAdmin, async (req, res) => {
-    try {
-        const users = await User.find().select('-password');
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
-
-router.post('/reset-password/:userId', isAuthenticated, isAdmin, async (req, res) => {
-    try {
-        const user = await User.findById(req.params.userId);
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        const newPassword = Math.random().toString(36).slice(-8);
-        user.password = newPassword;
-        await user.save();
-
-      
-        res.json({ message: 'Password reset successfully', newPassword });
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
-    }
-});
+router.get('/users', authenticate('admin'), getUsers);
+router.post('/toggle-access/:userId', authenticate('master_admin'), toggleUserAccess);
+router.get('/admins', authenticate('master_admin'), getAdmins);
+router.post('/promote/:userId', authenticate('master_admin'), promoteToAdmin);
+router.post('/demote/:userId', authenticate('master_admin'), demoteAdmin);
+router.post('/toggle-2fa/:userId', authenticate('master_admin'), toggle2FA);
 
 module.exports = router;
