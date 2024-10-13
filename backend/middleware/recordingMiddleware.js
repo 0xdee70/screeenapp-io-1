@@ -2,24 +2,25 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const authMiddleware = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-        return res.status(401).json({ message: 'Authorization header missing' });
+const recordingMiddleware = (req, res, next) => {
+    let token = req.header('Authorization')?.replace('Bearer ', '');
+
+    // If no token in header, check query parameters
+    if (!token) {
+        token = req.query.token;
     }
 
-    const token = authHeader.split(' ')[1];
     if (!token) {
-        return res.status(401).json({ message: 'Token missing' });
+        return res.status(401).json({ message: 'Authorization token missing' });
     }
 
     try {
         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
-        req.userId = decodedToken.id;
+        req.userId = decodedToken.userId;
         next();
     } catch (error) {
         return res.status(401).json({ message: 'Invalid token' });
     }
 };
 
-module.exports = authMiddleware;
+module.exports = recordingMiddleware;

@@ -5,10 +5,25 @@ let camRecorder = null;
 let screenStream = null;
 let cameraStream = null;
 
-export const startRecording = async (recordingMode) => {
+const getVideoConstraints = (quality) => {
+    switch (quality) {
+        case 'low':
+            return { width: 640, height: 480, frameRate: 15 };
+        case 'medium':
+            return { width: 1280, height: 720, frameRate: 30 };
+        case 'high':
+            return { width: 1920, height: 1080, frameRate: 60 };
+        default:
+            return { width: 1280, height: 720, frameRate: 30 }; // Default to medium
+    }
+};
+
+export const startRecording = async (recordingMode, quality) => {
+    const videoConstraints = getVideoConstraints(quality);
+
     if (recordingMode !== 'Camera Only') {
         screenStream = await navigator.mediaDevices.getDisplayMedia({
-            video: { width: 1920, height: 1080, frameRate: 30 },
+            video: videoConstraints,
             audio: true,
         });
         screenRecorder = new RecordRTC(screenStream, { type: "video" });
@@ -17,11 +32,38 @@ export const startRecording = async (recordingMode) => {
 
     if (recordingMode !== 'Screen Only') {
         cameraStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+            video: videoConstraints,
             audio: true,
         });
         camRecorder = new RecordRTC(cameraStream, { type: "video" });
         camRecorder.startRecording();
+    }
+
+    if (recordingMode === 'Blend Recording') {
+        const manualRecordingOption = prompt("Choose a manual recording option: \n1. Screen + Mic\n2. Camera + Screen (Audio Only)\nPlease enter 1 or 2.");
+
+        if (manualRecordingOption === "1") {
+            screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: videoConstraints,
+                audio: true,
+            });
+            screenRecorder = new RecordRTC(screenStream, { type: "video" });
+            screenRecorder.startRecording();
+        } else if (manualRecordingOption === "2") {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: videoConstraints,
+                audio: false,
+            });
+            camRecorder = new RecordRTC(cameraStream, { type: "video" });
+            camRecorder.startRecording();
+
+            screenStream = await navigator.mediaDevices.getDisplayMedia({
+                video: videoConstraints,
+                audio: true,
+            });
+            screenRecorder = new RecordRTC(screenStream, { type: "video" });
+            screenRecorder.startRecording();
+        }
     }
 };
 
@@ -54,7 +96,7 @@ export const stopRecording = async () => {
     return { screenVideo: screenBlob, webcamVideo: camBlob };
 };
 
-export const saveRecordingToDatabase = async (recordingBlobs) => {
+export const saveRecordingToDatabase = async (recordingBlobs, title) => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
         throw new Error("No access token found");
@@ -65,6 +107,7 @@ export const saveRecordingToDatabase = async (recordingBlobs) => {
             const formData = new FormData();
             if (webcamVideo) formData.append("webcamVideo", webcamVideo, "webcamVideo.webm");
             if (screenVideo) formData.append("screenVideo", screenVideo, "screenVideo.webm");
+            formData.append("title", title); // Ensure title is included
 
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recordings`, {
                 method: "POST",
@@ -86,45 +129,6 @@ export const saveRecordingToDatabase = async (recordingBlobs) => {
     }
 };
 
-export const saveRecordingLocally = (recordingBlobs) => {
-    recordingBlobs.forEach((blob, index) => {
-        if (blob.screenVideo) {
-            const screenUrl = URL.createObjectURL(blob.screenVideo);
-            const screenLink = document.createElement("a");
-            screenLink.href = screenUrl;
-            screenLink.download = `screen_recording_${index}.webm`;
-            screenLink.click();
-        }
-        if (blob.webcamVideo) {
-            const webcamUrl = URL.createObjectURL(blob.webcamVideo);
-            const webcamLink = document.createElement("a");
-            webcamLink.href = webcamUrl;
-            webcamLink.download = `webcam_recording_${index}.webm`;
-            webcamLink.click();
-        }
-    });
-};
-
-export const fetchPreviousRecordings = async () => {
-    const token = localStorage.getItem("accessToken");
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recordings`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
-
-    if (!response.ok) {
-        throw new Error("Failed to fetch previous recordings");
-    }
-
-    const data = await response.json();
-    return data.map(recording => ({
-        ...recording,
-        webcamVideo: recording.webcamVideo ? URL.createObjectURL(new Blob([new Uint8Array(recording.webcamVideo.data)], { type: 'video/webm' })) : null,
-        screenVideo: recording.screenVideo ? URL.createObjectURL(new Blob([new Uint8Array(recording.screenVideo.data)], { type: 'video/webm' })) : null,
-    }));
-};
-
 export const deleteRecording = async (id) => {
     const token = localStorage.getItem("accessToken");
     const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recordings/${id}`, {
@@ -139,4 +143,43 @@ export const deleteRecording = async (id) => {
     }
 
     return await response.json();
+};
+
+export const streamVideo = async (key) => {
+    if (!key) {
+        console.error("Attempted to stream video with undefined key");
+        throw new Error("Video key is missing");
+    }
+
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+        throw new Error("No access token found");
+    }
+
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recordings/stream/${key}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return response;
+    } catch (error) {
+        console.error("Error streaming video:", error);
+        throw error;
+    }
+};
+
+export const pauseRecording = () => {
+    if (screenRecorder) screenRecorder.pauseRecording();
+    if (camRecorder) camRecorder.pauseRecording();
+};
+
+export const resumeRecording = () => {
+    if (screenRecorder) screenRecorder.resumeRecording();
+    if (camRecorder) camRecorder.resumeRecording();
 };

@@ -4,7 +4,7 @@ import { Clock, Database, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { colors } from "@/lib/colors";
 
-const RecordingControls = ({ isRecording, isLoading, recordingMode, handleStart, handleStop, handleSave, saveRecordingLocally, recordedTime, recordingBlobs }) => (
+const RecordingControls = ({ isRecording, isLoading, recordingMode, handleStart, handleStop, handleSave, recordedTime, recordingBlobs }) => (
     <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
         <Button
             onClick={isRecording ? handleStop : handleStart}
@@ -19,7 +19,6 @@ const RecordingControls = ({ isRecording, isLoading, recordingMode, handleStart,
         {recordingBlobs.length > 0 && (
             <SaveButtons
                 handleSave={handleSave}
-                saveRecordingLocally={saveRecordingLocally}
                 isRecording={isRecording}
                 isLoading={isLoading}
                 recordingBlobs={recordingBlobs}
@@ -39,14 +38,12 @@ const RecordingTimer = ({ recordedTime }) => (
     </div>
 );
 
-const SaveButtons = ({ handleSave, saveRecordingLocally, isRecording, isLoading, recordingBlobs }) => (
+const SaveButtons = ({ handleSave, isRecording, isLoading, recordingBlobs }) => (
     <div className="flex gap-2">
         <Button onClick={handleSave} disabled={isRecording || isLoading} className={cn("h-12 font-semibold", colors.primary)}>
             <Database className="mr-2 h-4 w-4" />{recordingBlobs.length > 1 ? "Save All to DB" : "Save to DB"}
         </Button>
-        <Button onClick={saveRecordingLocally} disabled={isRecording || isLoading} className={cn("h-12 font-semibold", colors.secondary)}>
-            <Download className="mr-2 h-4 w-4" /> {recordingBlobs.length > 1 ? "Save All Locally" : "Save Locally"}
-        </Button>
+
     </div>
 );
 

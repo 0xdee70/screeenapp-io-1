@@ -15,8 +15,10 @@ const AuthCallback = () => {
 
       if (role === 'admin') {
         navigate('/admin');
+      } else if (role === 'master_admin') {
+        navigate('/master-admin');
       } else {
-        navigate('/screen');
+        navigate('/dashboard');
       }
     } else {
       navigate('/login');
@@ -27,5 +29,3 @@ const AuthCallback = () => {
 };
 
 export default AuthCallback;
-
-

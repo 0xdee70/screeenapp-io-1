@@ -6,8 +6,14 @@ const recordingSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  webcamVideo: Buffer,
-  screenVideo: Buffer,
+  webcamVideo: String,
+  screenVideo: String,
+  uploaded: String,
+  // Removed thumbnail field
+  title: {
+    type: String,
+    required: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

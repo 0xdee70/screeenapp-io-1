@@ -5,8 +5,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { cn } from "@/lib/utils";
 import { colors } from "@/lib/colors";
 import { Fragment } from 'react';
+import RecordedVideosSkeleton from "@/components/ScreenRecord/ScreenRecordSkeleton";
+const RecordedVideos = ({ recordingBlobs, handleSaveBulk, handleDiscardBulk, isLoading }) => {
 
-const RecordedVideos = ({ recordingBlobs, handleSaveBulk, handleDiscardBulk }) => {
     const [editMode, setEditMode] = useState(false);
     const [selectedVideos, setSelectedVideos] = useState([]);
     const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
@@ -42,6 +43,10 @@ const RecordedVideos = ({ recordingBlobs, handleSaveBulk, handleDiscardBulk }) =
         setSelectedVideos([]);
         setIsDiscardDialogOpen(false);
     };
+
+    if (isLoading) {
+        return <RecordedVideosSkeleton />;
+    }
 
     return (
         <div className="mt-8 space-y-6">
