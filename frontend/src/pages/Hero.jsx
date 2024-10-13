@@ -8,7 +8,7 @@ const Hero = () => {
       <div className="flex flex-col md:flex-row items-center mb-16">
         <div className="md:w-1/2 mb-8 md:mb-0 text-left">
           <h1 className="text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-500">
-            Create Engaging Videos with ScreenCast Pro
+            Create Engaging Videos with VOID
           </h1>
           <p className="text-xl text-gray-600 mb-8">
             Boost your communication with personalized screen recordings. Easy to create, share, and track.

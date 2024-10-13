@@ -186,7 +186,7 @@ const LoginPage = () => {
             </p>
           </CardContent>
         </Card>
-        <p className="text-center mt-4 text-black">
+        <p className="text-center mt-4 text-white">
           Don't have an account?{" "}
           <Link to="/register" className="text-blue-500 font-semibold hover:underline">
             Sign up
