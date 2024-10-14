@@ -13,6 +13,8 @@
     "@nextui-org/react": "^2.4.8",
     "@radix-ui/react-switch": "^1.1.0",
     "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-alert-dialog": "^1.1.1",
+     "@radix-ui/react-progress": "^1.1.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "formik": "^2.4.6",
