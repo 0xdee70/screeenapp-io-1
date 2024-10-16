@@ -9,12 +9,9 @@ const userSchema = new mongoose.Schema({
   githubId: { type: String, unique: true, sparse: true },
   googleId: { type: String, unique: true, sparse: true },
   microsoftId: { type: String, unique: true, sparse: true },
-  role: { type: String, enum: ['user', 'admin', 'master_admin', 'pro_user'], default: 'user', required: true },
+  role: { type: String, enum: ['user', 'admin'], default: 'user', required: true },
   isActive: { type: Boolean, default: true },
-  twoFactorSecret: String,
-  twoFactorEnabled: { type: Boolean, default: false },
-  avatarUrl: { type: String },
-  isProUser: { type: Boolean, default: false }
+  avatarUrl: { type: String }
 });
 
 // Hash the password before saving only if it's set and modified

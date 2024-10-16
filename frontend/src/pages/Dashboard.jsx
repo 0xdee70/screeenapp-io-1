@@ -1,22 +1,19 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import MainContent from '@/components/MainContent';
 import SearchOverlay from '@/components/SearchOverlay';
+import Footer from '@/components/Footer';
+import ScreenRecord from '@/pages/ScreenRecord';
 import { cn } from "@/lib/utils";
-import { Video, FileText, UserPlus, AlertCircle, CheckCircle, Trash2, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Video, FileText, UserPlus, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import Footer from '@/components/Footer';
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
-
-
-
-import ScreenRecord from '@/pages/ScreenRecord'; // Import the ScreenRecord component
 
 const navItems = [
     {
@@ -53,16 +50,11 @@ const Dashboard = () => {
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false);
     const [videoCount, setVideoCount] = useState(0);
-    const [isRecording, setIsRecording] = useState(false); // New state to track recording mode
+    const [isRecording] = useState(false); // New state to track recording mode
     const [isUploading, setIsUploading] = useState(false);
     const [currentView, setCurrentView] = useState('library'); // Add this line
 
-    useEffect(() => {
-        fetchUserProfile();
-        fetchRecordings();
-    }, []);
-
-    const fetchUserProfile = async () => {
+    const fetchUserProfile = useCallback(async () => {
         try {
             const token = localStorage.getItem('accessToken');
             if (!token) {
@@ -72,11 +64,7 @@ const Dashboard = () => {
             }
 
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-
-
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (!response.ok) {
@@ -93,46 +81,43 @@ const Dashboard = () => {
         } catch (error) {
             toast.error("Failed to fetch user profile: " + error.message);
         }
-    };
+    }, [navigate]);
 
-    const fetchRecordings = async () => {
+    const fetchRecordings = useCallback(async () => {
         try {
             const token = localStorage.getItem('accessToken');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recordings`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!response.ok) {
-                throw new Error('Failed to fetch recordings');
-            }
+            if (!response.ok) throw new Error('Failed to fetch recordings');
             const data = await response.json();
             setRecordings(data);
             setVideoCount(data.length);
         } catch (error) {
             toast.error("Failed to fetch recordings");
         }
-    };
+    }, []);
 
-    const handleDeleteVideo = async (videoId) => {
+    useEffect(() => {
+        fetchUserProfile();
+        fetchRecordings();
+    }, [fetchUserProfile, fetchRecordings]);
+
+    const handleDeleteVideo = useCallback(async (videoId) => {
         try {
             const token = localStorage.getItem('accessToken');
             const response = await fetch(`${import.meta.env.VITE_API_URL}/api/recordings/${videoId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!response.ok) {
-                throw new Error('Failed to delete video');
-            }
+            if (!response.ok) throw new Error('Failed to delete video');
             setRecordings(prevRecordings => prevRecordings.filter(video => video.id !== videoId));
             setVideoCount(prevCount => prevCount - 1);
             toast.success(`Video ${videoId} deleted successfully!`);
         } catch (error) {
             toast.error("Failed to delete video");
         }
-    };
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (event) => {
@@ -206,9 +191,13 @@ const Dashboard = () => {
         );
     };
 
-    const handleAction = (action) => {
+    const handleAction = () => {
         // Implement the actual action logic here
+        console.log("handleAction");
     };
+
+
+
 
     const handleUpgradeClick = () => {
         setIsUpgradeDialogOpen(true);
@@ -272,7 +261,7 @@ const Dashboard = () => {
         setUploadError(errors.length > 0 ? errors.join('\n') : null);
     };
 
-    const handleUploadConfirm = async () => {
+    const handleUploadConfirm = useCallback(async () => {
         setIsUploading(true);
         setUploadError(null);
 
@@ -318,7 +307,7 @@ const Dashboard = () => {
         setIsUploading(false);
         setUploadedFiles([]);
         setIsUploadDialogOpen(false);
-    };
+    }, [uploadedFiles]);
 
     const formatFileSize = (bytes) => {
         if (bytes === 0) return '0 Bytes';

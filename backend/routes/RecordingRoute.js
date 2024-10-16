@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const RecordingController = require('../controller/RecordingController');
-const recordingMiddleware = require('../middleware/recordingMiddleware');
+const RecordingController = require('../controller/RecordingControllerMongo');
+const recordingMiddleware = require('../middleware/recordingMiddlewareMongo');
 const upload = multer();
 
 router.post('/recordings', recordingMiddleware, upload.fields([

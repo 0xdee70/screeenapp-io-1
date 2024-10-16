@@ -9,7 +9,7 @@ const dotenv = require('dotenv');
 const passport = require('passport');
 const { v4: uuidv4 } = require('uuid');
 dotenv.config();
-const { setupTwoFactor, verifyAndEnableTwoFactor, verifyTwoFactor } = require('../controller/2FAcontroller');
+
 
 // Configure AWS
 const client = new DynamoDBClient({
@@ -184,9 +184,7 @@ router.post('/admin-login', async (req, res) => {
     }
 });
 
-router.post('/setup-2fa', authenticate('master_admin'), setupTwoFactor);
-router.post('/enable-2fa', authenticate('master_admin'), verifyAndEnableTwoFactor);
-router.post('/verify-2fa', verifyTwoFactor);
+
 
 router.get('/protected', (req, res) => {
     const token = req.header('Authorization').replace('Bearer ', ' ');
@@ -203,9 +201,7 @@ router.get('/user', authenticate('user'), (req, res) => {
     res.json({ message: 'User access granted', user: req.user });
 });
 
-router.get('/admin', authenticate('admin'), (req, res) => {
-    res.json({ message: 'Admin access granted', user: req.user });
-});
+
 
 const handleSSOCallback = (strategy) => async (req, res) => {
     passport.authenticate(strategy, { failureRedirect: `/api/auth/${strategy}/failure` })(req, res, async (err) => {
@@ -251,28 +247,6 @@ router.get('/google/callback', handleSSOCallback('google'));
 router.get('/microsoft', passport.authenticate('microsoft', { scope: ['user.read'] }));
 router.get('/microsoft/callback', handleSSOCallback('microsoft'));
 
-router.post('/business-sso', async (req, res) => {
-    const { businessId } = req.body;
 
-    try {
-        // Here you would typically validate the businessId against your database
-        // For this example, we'll just check if it's not empty
-        if (!businessId) {
-            return res.status(400).json({ message: 'Business ID is required' });
-        }
-
-        // In a real-world scenario, you'd fetch the user associated with this business ID
-        // For now, we'll create a mock user
-        const user = {
-            _id: 'business_' + businessId,
-            role: 'business_user'
-        };
-
-        const token = generateToken(user);
-        res.json({ token, role: user.role });
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-    }
-});
 
 module.exports = router;
